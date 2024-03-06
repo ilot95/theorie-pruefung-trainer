@@ -6,6 +6,7 @@ from scrape import get_json, dump_dict
 import requests
 from setup_db import VID_PATH
 import progress
+import re
 
 eel.init('web')  # Set the web folder path (containing index.html, style.css, and script.js)
 
@@ -67,7 +68,7 @@ def called_page(page:str):
         
         generator = questions_generator_yielder(questions)
     
-    elif page.startswith('set'):
+    elif re.match(r'set[0-9]+', page) or page == 'set_random':
         if page == 'set_random':
             filtered_sets = filters.filter_undone_sets()
             if not filtered_sets:
@@ -197,6 +198,8 @@ def get_unseen():
 def get_category_stats():
     return progress.get_stats()
 
+@eel.expose
+def 
 
 if __name__ == '__main__':
     eel.start('index.html', mode='default')  # Open the GUI window

@@ -3,3 +3,4 @@ apk/lite.apk
 web/assets/vid
 old/lite zip
 demo/gen.py
+__pycache__/

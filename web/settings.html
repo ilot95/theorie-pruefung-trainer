@@ -3,14 +3,37 @@
 <head>
   <title>Settings Page</title>
   <link rel="stylesheet" type="text/css" href="./css/index.css">
+  <link rel="stylesheet" type="text/css" href="./css/settings.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
   <link rel="icon" type="image/x-icon" href="/img/icon.ico">
 </head>
 <body>
-  <!-- Your page content for Settings goes here -->
-  
+  <h1>Settings</h1>
+  <div class="settings-container">
+    <div class="setting">
+      <span>Exam Date</span>
+      <input type="date" id="exam_date">
+    </div>
+    <div class="setting">
+      <span>Language</span>
+      <select id="language">
+        <option value="en">English</option>
+        <option value="de">Deutsch</option>
+      </select>
+    </div>
+    <div class="setting">
+      <span>Downloaded Videos</span>
+      <span id="downloaded_videos">-</span>
+      <button onclick="dl_all()">Download all</button>
+    </div>
+    <div class="buttons">
+      <button onclick="update_db()">Update database</button>
+      <button onclick="reset_progress()">Reset (Lose Progress!)</button>
+    </div>
+  </div>
   <script type="text/javascript" src="/eel.js"></script>
   <script type="text/javascript" src="./js/index.js"></script>
+  <script type="text/javascript" src="./js/settings.js"></script>
   <script type="text/javascript">
     handlePage('settings');
   </script>
