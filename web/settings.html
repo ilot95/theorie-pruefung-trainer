@@ -15,16 +15,15 @@
       <input type="date" id="exam_date">
     </div>
     <div class="setting">
-      <span>Language</span>
+      <span>Language (Questions)</span>
       <select id="language">
-        <option value="en">English</option>
-        <option value="de">Deutsch</option>
       </select>
     </div>
     <div class="setting">
       <span>Downloaded Videos</span>
       <span id="downloaded_videos">-</span>
-      <button onclick="dl_all()">Download all</button>
+      <button onclick="dl_all()" id="dl_button">Download all</button>
+      <button onclick="dl_rm()">Delete all</button>
     </div>
     <div class="buttons">
       <button onclick="update_db()">Update database</button>

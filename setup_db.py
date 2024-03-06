@@ -7,36 +7,73 @@ import scrape
 import os
 import zipfile
 from progress import init_progress
+import datetime
+import re
 
 
 IMG_PATH = "./web/assets/img"
 VID_PATH = './web/assets/vid'
-APK_PATH = './apk/'
-DB_1_OR_2 = '1'
+apk_path = './apk/'
 VID_URL = 'https://www.theorie24.de/live_images/_current_ws_2023-04-01_2023-10-01/videos/'
 
+langs = {}
+with open('data/langs.json', 'r', encoding='utf-8') as f:
+    langs = json.load(f)
 
-def get_files_from_apk():
-    print('extracting from apk...')
-    apks = [file for file in os.listdir(APK_PATH) if file.endswith('.apk')]
+def get_valid_dates(n):
+    o = []
+    with open('js/tblQuestions.js') as f:
+        js = f.read()
+        for i in ['ValidFromDate', 'ValidBeforeDate']:
+            function_name = 'getDb' + str(n) + str(i)
+            start_index = js.find(f'function {function_name}()')
+            end_index = js.find('}', start_index)
+            function_code = js[start_index:end_index+1]
+            date_pattern = r"\d{4}-\d{2}-\d{2}"
+            match = re.search(date_pattern, function_code)
+            o.append(datetime.datetime.strptime(match.group(), '%Y-%m-%d'))
+    return o
+
+def get_files_from_apk(exam_date: datetime.datetime, lang: str):
+    global apk_path
+    print('extracting from apk...')    
+    apks = [file for file in os.listdir(apk_path) if file.endswith('.apk')]
     if not apks:
-        print('no apks found in', APK_PATH)
-        quit()
-    apk = APK_PATH + apks[0]
+        raise FileNotFoundError('no apks found in', apk_path)
+    apk = apk_path + apks[0]
     os.makedirs(IMG_PATH, exist_ok=True)
     os.makedirs(VID_PATH, exist_ok=True)
     os.makedirs('js/en', exist_ok=True)
     os.makedirs('js/dbs', exist_ok=True)
 
     print('extracting javascript...')
-    js_path = f'assets/www/data/{DB_1_OR_2}/'
+    
+    js_path = f'assets/www/data/'
     js_files = ["tblQuestions.js", "tblQuestionInfos.js", "tblSets.js"]
 
+    valid_dates = []
+    for f in js_files[:1]:
+        for i in range(1, 3):
+            fpath = js_path + str(i) + '/' + f
+            extract_from_zip(apk, 'js', fpath)
+            valid_dates.append(get_valid_dates(i))
+
+    db_1_or_2 = None
+    
+    for c, d in enumerate(valid_dates):
+        if d[0] <= exam_date <= d[1]:
+            db_1_or_2 = c+1                
+            break
+    
+    if db_1_or_2 is None:
+        raise ValueError('exam date not in valid range', exam_date, valid_dates)
+            
+    
     for f in js_files:
-        fpath = js_path + f
+        fpath = js_path + db_1_or_2 + '/' + f
         extract_from_zip(apk, 'js', fpath)
 
-    extract_from_zip(apk, 'js/en', js_path+'ext/GB/tblQuestions.js')
+    extract_from_zip(apk, 'js/en', f'{js_path}ext/{lang}/tblQuestions.js')
     print('done extracting')
     return apk
 
@@ -63,12 +100,13 @@ def extract_files_from_zip_folder(apk, output_folder, folder_to_extract):
 
 
 def extract_imgs(questions):
+    global apk_path
     print('extracting images...')
-    apks = [file for file in os.listdir(APK_PATH) if file.endswith('.apk')]
+    apks = [file for file in os.listdir(apk_path) if file.endswith('.apk')]
     if not apks:
-        print('no apks found in', APK_PATH)
+        print('no apks found in', apk_path)
         quit()
-    apk = APK_PATH + apks[0]
+    apk = apk_path + apks[0]
 
     imgs_used = []
 
@@ -148,7 +186,7 @@ def merge_files():
 
 def execute_js(filename, variable_name, output_filename=None):
     # Set up the WebDriver service
-    webdriver_service = Service('C:\\Users\\boon\\Documents\\python\\chromedriver_win32\\chromedriver.exe')
+    webdriver_service = Service('chromedriver.exe')
     webdriver_options = Options()
     webdriver_options.headless = True  # Run the browser in headless mode
     driver = webdriver.Chrome(service=webdriver_service, options=webdriver_options)
@@ -387,10 +425,27 @@ def exec_and_filter(dump=False):
         print(len(i), s)
 
 
+def setup_db(exam_date: datetime.datetime, lang:str, date_change: bool, lang_change: bool, first_setup:bool, _apk_path=None):
+    global apk_path, langs
+    apk_path = _apk_path or apk_path
+    assert lang in list(langs.keys())
+    
+    if True in [date_change, lang_change, first_setup]:
+        if lang_change or first_setup:
+            scrape.get_categories(lang)
+        get_files_from_apk(exam_date, lang)
+        exec_and_filter(dump=False)
+        scrape.add_lacking_questions()
+        scrape.remove_unused_questions()
+
+    if first_setup:
+        init_progress()
+    try:
+        os.rmdir('js')
+    except FileNotFoundError:
+        pass
+    print('done')
+
+
 if __name__ == '__main__':
-    scrape.get_categories()
-    get_files_from_apk()
-    exec_and_filter(dump=False)
-    init_progress()
-    scrape.add_lacking_questions()
-    scrape.remove_unused_questions()
+    setup_db()

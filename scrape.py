@@ -9,17 +9,20 @@ import json
 CACHE_FOLDER = "cache"
 DBS_FOLDER = "data"
 
-webpage_test_sample = 'https://www.ifuhrerscheintest.de/test.aspx'
-MAIN_URL = 'https://www.clickclickdrive.de/fragenkatalog/en'
+MAIN_URL = 'https://www.clickclickdrive.de/fragenkatalog/'
 
+"""
 #examples for question types
+webpage_test_sample = 'https://www.ifuhrerscheintest.de/test.aspx'
 example_text = 'https://www.clickclickdrive.de/fragenkatalog/en/1.1.-danger-teaching/1.1.01-basic-forms-of-traffic-behavior/1.1.01-001'
 example_video = 'https://www.clickclickdrive.de/fragenkatalog/en/1.1.-danger-teaching/1.1.02-behavior-towards-pedestrians/1.1.02-137-M'
 example_image = 'https://www.clickclickdrive.de/fragenkatalog/en/1.1.-danger-teaching/1.1.07-special-traffic-situations/1.1.07-020-M'
 example_number = 'https://www.clickclickdrive.de/fragenkatalog/en/1.2.-behaviour-in-traffic/1.2.03-speed/1.2.03-101'
 example_number_image = 'https://www.clickclickdrive.de/fragenkatalog/en/2.4.-traffic-sign/2.4.41-regulatory-sign/2.4.41-103'
+"""
 
-
+langs = {'TR': 'tr', 'PL': 'pl', 'E': 'es', 'I': 'it', 'PT': 'pt', 'AR': 'ar', 'F': 'fr', 'RO': 'ro', 'RUS': 'ru', 'GB': 'en', 'DE': 'de', 'HR': 
+'hr', 'GR': 'gr'}
 
 os.makedirs(CACHE_FOLDER, exist_ok=True)
 os.makedirs(DBS_FOLDER, exist_ok=True)
@@ -94,10 +97,11 @@ def dump_dict(dic: dict, filename):
         json.dump(dic, f, indent=3)
 
 
-def get_categories():
+def get_categories(lang:str):
+    lang = langs[lang]
     db_name = 'categories.json'
     categories = {}
-    soup = get_soup(MAIN_URL)
+    soup = get_soup(MAIN_URL + lang)
     cat_divs = soup.find_all('div', class_='theoryWorld')
     for d in cat_divs:
         cid = d.find('span', class_='number').text.split(' ')[-1]
@@ -232,13 +236,5 @@ def remove_unused_cats():
     dump_dict(cout, 'categories.json')
 
 
-def download_all_videos():
-    from gui import download_video
-    vids = get_json('vids.json')
-    for c, v in enumerate(vids):
-        download_video(v)
-        print(f'{c+1}/{len(vids)}')
-
-
 if __name__ == '__main__':
-    download_all_videos()
+    get_categories('DE')

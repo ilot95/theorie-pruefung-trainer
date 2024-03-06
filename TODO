@@ -35,3 +35,4 @@ Todo:
   ☐ ability to click on category from statistics
   ☐ questions per hour to show all submitted
   ☐ minute average to be more accurate
+  ☐ make scraping faster using threads / get categories from js

@@ -5,8 +5,11 @@ import random
 from scrape import get_json, dump_dict
 import requests
 from setup_db import VID_PATH
+import setup_db as sdb
 import progress
 import re
+import os
+from datetime import datetime
 
 eel.init('web')  # Set the web folder path (containing index.html, style.css, and script.js)
 
@@ -112,7 +115,6 @@ def download_video(vid):
             f.write(response.content)
         vids[vid]['downloaded'] = True
         dump_dict(vids, 'vids.json')
-        print(f"{vid} downloaded successfully.")
     else:
         print(f"Failed to download {vid} Status code: {response.status_code}")
 
@@ -198,8 +200,91 @@ def get_unseen():
 def get_category_stats():
     return progress.get_stats()
 
-@eel.expose
-def 
 
+@eel.expose
+def get_dl_videos():
+    s = 0
+    t = len(vids)
+    for v in vids:
+        if vids[v]['downloaded']:
+            s += 1
+    return f'{s}/{t}'
+
+
+@eel.expose
+def get_exam_date():
+    return get_json('settings.json')['exam_date']
+
+
+@eel.expose
+def rm_dl_videos():
+    global vids
+    for v in vids:
+        if vids[v]['downloaded']:
+            vids[v]['downloaded'] = False
+            os.remove(VID_PATH + '/' + v)        
+    dump_dict(vids, 'vids.json')
+    return get_dl_videos()
+
+
+@eel.expose
+def dl_all_videos():
+    global vids
+    for v in vids:
+        if not vids[v]['downloaded']:
+            download_video(v)
+            eel.update_dl_span(get_dl_videos())
+            if eel.get_cancelled()():
+                eel.set_cancelled(False)
+                eel.cancel_success()
+                break
+    return get_dl_videos()
+
+
+@eel.expose
+def reset_progress():
+    progress.init_progress()
+
+@eel.expose
+def get_selected_lang():
+    with open('data/langs.json', 'r', encoding='utf-8') as f:
+        d = json.load(f)
+    with open('data/settings.json', 'r') as f:
+        lang = json.load(f)['lang']
+    for i in d:
+        if i == lang:
+            return i
+
+@eel.expose
+def get_supported_langs():
+    with open('data/langs.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+@eel.expose
+def setup_db(exam_date, lang, date_change: bool, lang_change: bool, first_setup:bool, apk_path=None):
+    exam_date = datetime.strptime(exam_date, '%Y-%m-%d')
+    sdb.setup_db(exam_date, lang, date_change, lang_change, first_setup, apk_path)
+
+
+@eel.expose
+def update_lang(lang):
+    with open('data/settings.json', 'r') as f:
+        settings = json.load(f)
+    if lang == settings['lang']:
+        return
+    setup_db(settings['exam_date'], lang, False, True, False)
+    settings['lang'] = lang
+    with open('data/settings.json', 'w') as f:
+        json.dump(settings, f)
+    
+@eel.expose
+def update_exam_date(date):
+    settings = get_json('settings.json')
+    if date == settings['exam_date']:
+        return
+    setup_db(date, settings['lang'], True, False, False)
+    settings['exam_date'] = date
+    dump_dict(settings, 'settings.json')
+    
 if __name__ == '__main__':
     eel.start('index.html', mode='default')  # Open the GUI window

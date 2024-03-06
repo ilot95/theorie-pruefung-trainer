@@ -49,13 +49,13 @@ body{
 }
 
 .setting button{
-    margin: 10px;
     font-size: 16px;
     padding: 5px;
     border-radius: 5px;
     border: 1px solid black;
     cursor: pointer;
-    width: 15%;
+    width: 10%;
+    min-height: 50px;
 }
 
 .setting input, select{

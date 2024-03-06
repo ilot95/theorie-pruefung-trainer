@@ -5,14 +5,14 @@ from datetime import datetime, timedelta
 from math import ceil
 
 DATE_FORMAT = '%d-%m-%Y %H:%M'
-TEST_DATE = '22-08-2023'
-TEST_DATE = datetime.strptime(TEST_DATE, '%d-%m-%Y')
 
 all_questions = get_json('questions.json')
 TOTAL = len(all_questions)
 
 STAT_DAYS = 12  #number of days to get stats for
 
+def get_test_date():
+    return datetime.strptime(get_json('settings.json')['exam_date'], '%Y-%m-%d')
 
 # allows spoofing the date for testing
 def now_date():
@@ -179,7 +179,7 @@ def compare_days(date1: datetime, date2: datetime):
 def daily_goal(progress_days):
     keys = list(progress_days.keys())
     qleft = progress_days[keys[-2]]['not_seen']
-    days_left = (TEST_DATE - now_date()).days
+    days_left = (get_test_date() - now_date()).days
     return ceil(qleft / (days_left+2))
     
 
