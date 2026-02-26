@@ -6,6 +6,7 @@ import shortuuid
 import json
 
 
+#this file is no longer needed by itself some parts might still be used
 CACHE_FOLDER = "cache"
 DBS_FOLDER = "data"
 
