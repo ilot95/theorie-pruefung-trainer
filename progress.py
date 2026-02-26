@@ -22,7 +22,10 @@ def now_date():
 def init_progress():
     init_progress_sets()
     progress = {}
-    
+
+
+    global all_questions
+    all_questions = get_json('questions.json')
     for q in all_questions:
         progress[q] = {
             'times_seen': 0,
