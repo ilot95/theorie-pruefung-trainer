@@ -14,7 +14,7 @@ import re
 IMG_PATH = "./web/assets/img"
 VID_PATH = './web/assets/vid'
 apk_path = './apk/'
-VID_URL = 'https://www.theorie24.de/live_images/_current_ws_2023-04-01_2023-10-01/videos/'
+VID_URL = 'https://www.theorie24.de/live_images/_current_ws_2024-10-01_2025-04-01/videos/'
 
 langs = {}
 with open('data/langs.json', 'r', encoding='utf-8') as f:
@@ -42,6 +42,8 @@ def get_files_from_apk(exam_date: datetime.datetime, lang: str):
         raise FileNotFoundError('no apks found in', apk_path)
     apk = apk_path + apks[0]
     os.makedirs(IMG_PATH, exist_ok=True)
+    os.makedirs(IMG_PATH + "/ans/", exist_ok=True)
+    os.makedirs(IMG_PATH + "/etc/", exist_ok=True)
     os.makedirs(VID_PATH, exist_ok=True)
     os.makedirs('js/en', exist_ok=True)
     os.makedirs('js/dbs', exist_ok=True)
@@ -70,10 +72,11 @@ def get_files_from_apk(exam_date: datetime.datetime, lang: str):
             
     
     for f in js_files:
-        fpath = js_path + db_1_or_2 + '/' + f
+        fpath = js_path + str(db_1_or_2) + '/' + f
         extract_from_zip(apk, 'js', fpath)
 
-    extract_from_zip(apk, 'js/en', f'{js_path}ext/{lang}/tblQuestions.js')
+    #is needed; wrong path
+    extract_from_zip(apk, 'js/en', f'{js_path}{db_1_or_2}/ext/{lang}/tblQuestions.js')
     print('done extracting')
     return apk
 
@@ -109,19 +112,34 @@ def extract_imgs(questions):
     apk = apk_path + apks[0]
 
     imgs_used = []
-
+    imgs_used_answers = []
+    imgs_used_etc = []
     for i in questions:
         if not questions[i]['picture']:
+            if 'asw_1' in questions[i]:
+                if '<img src="./assets/img/ans/' in questions[i]['asw_1']:
+                    imgs_used_answers.append(i+ "_a1.png")
+                    imgs_used_answers.append(i + "_a2.png")
+                    imgs_used_answers.append(i + "_a3.png")
+
             continue
         if questions[i]['picture'].endswith('.jpg') or questions[i]['picture'].endswith('.png'):
             imgs_used.append(questions[i]['picture'])
-    imgs_in_apk = 'assets/www/assets/img/images/'
-
+    imgs_in_apk = 'assets/www/data/img/images/'
+    #assets/www/data/img/images/1.1.02-032.jpg
+    imgs_in_apk_answers= 'assets/www/data/img/answers/'
+    #assets / www / data / img / answers / 1.4.40 - 013_a1.png
     for i in imgs_used:
         img_path = imgs_in_apk + i
         extract_from_zip(apk, IMG_PATH, img_path)
-    
-    extract_files_from_zip_folder(apk, IMG_PATH, 'assets/www/assets/img/etc/gb')
+    for i in imgs_used_answers:
+        img_path = imgs_in_apk_answers + i
+        extract_from_zip(apk, IMG_PATH + "/ans/", img_path)
+
+    #english
+    #extract_files_from_zip_folder(apk, IMG_PATH + "/etc/", 'assets/www/data/img/etc/ar')
+    #german
+    extract_files_from_zip_folder(apk, IMG_PATH + "/etc/", 'assets/www/data/img/etc/de/')
     print('done')
      
 
@@ -177,7 +195,7 @@ def merge_files():
     # Replace these paths with the actual paths to your JavaScript files
     wrap_code_in_function('js/en/tblQuestions.js', 'js/translateDB.js')
     input_files = ["js/tblQuestions.js", 'js/translateDB.js',"js/tblQuestionInfos.js", "js/tblSets.js"]
-    functions_to_call = ['initDb1TableQuestions()', 'translateDB()', 'initQuestionInfoDb1("gb")', 'initDb1TableSets()']
+    functions_to_call = ['initDb2TableQuestions()', 'translateDB()', 'initQuestionInfoDb2("de")', 'initDb2TableSets()']
     output_file = "js/merged.js"
 
     concatenate_js_files(input_files, output_file, functions_to_call)
@@ -186,7 +204,8 @@ def merge_files():
 
 def execute_js(filename, variable_name, output_filename=None):
     # Set up the WebDriver service
-    webdriver_service = Service('chromedriver.exe')
+    # assume globaly installed webdriver, might not work on windos
+    webdriver_service = Service()
     webdriver_options = Options()
     webdriver_options.headless = True  # Run the browser in headless mode
     driver = webdriver.Chrome(service=webdriver_service, options=webdriver_options)
@@ -244,14 +263,22 @@ def filter_sets_class6(data, output_filename=None):
 
 
 def change_etc_imgs(data, output_filename=None):
-    to_replace = "./assets/img/etc/gb/"
+    #to_replace = "./assets/img/etc/gb/"
+    #new path in new apk
+    img_answer_replace = "%IMG_ANSWER%/"
+    etc_replace = "%IMG_ETC%/"
     new_img_path = IMG_PATH.replace('web/', '') + '/'
 
     for i in data:
-        if to_replace in i['asw_1']:
-            i['asw_1'] = i['asw_1'].replace(to_replace, new_img_path)
-            i['asw_2'] = i['asw_2'].replace(to_replace, new_img_path)
-            i['asw_3'] = i['asw_3'].replace(to_replace, new_img_path)
+        if img_answer_replace in i['asw_1']:
+            i['asw_1'] = i['asw_1'].replace(img_answer_replace, new_img_path + "ans/")
+            i['asw_2'] = i['asw_2'].replace(img_answer_replace, new_img_path + "ans/")
+            i['asw_3'] = i['asw_3'].replace(img_answer_replace, new_img_path + "ans/")
+        #"<img src='%IMG_ETC%/div10mult3.png' alt='div10mult3.png' />"
+        if etc_replace in i['asw_1']:
+            i['asw_1'] = i['asw_1'].replace(etc_replace, new_img_path + "etc/")
+            i['asw_2'] = i['asw_2'].replace(etc_replace, new_img_path + "etc/")
+            i['asw_3'] = i['asw_3'].replace(etc_replace, new_img_path + "etc/")
     
     if output_filename:
         with open(output_filename, 'w') as f:
@@ -292,7 +319,11 @@ def replace_categories(data, output_filename=None):
             if i['number'] in subs[s]['questions']:
                 i['category'] = s
                 continue
-        assert i['category']
+        if not ('category' in i): #save question with a empty category if not found, dont assert
+            i['category'] = ""
+            print(f"Could not find Question {i['number']} in categories ")
+
+
     
     if output_filename:
         with open(output_filename, 'w') as f:
@@ -435,17 +466,20 @@ def setup_db(exam_date: datetime.datetime, lang:str, date_change: bool, lang_cha
             scrape.get_categories(lang)
         get_files_from_apk(exam_date, lang)
         exec_and_filter(dump=False)
-        scrape.add_lacking_questions()
-        scrape.remove_unused_questions()
+        #scrape.add_lacking_questions()
+       # scrape.remove_unused_questions()
 
     if first_setup:
         init_progress()
     try:
-        os.rmdir('js')
+        import shutil
+        shutil.rmtree('js')
     except FileNotFoundError:
         pass
     print('done')
 
 
 if __name__ == '__main__':
-    setup_db()
+    date = datetime.datetime(2026, 3, 17)
+    #not sure if language change is supported
+    setup_db(date,"DE",False,False,True)

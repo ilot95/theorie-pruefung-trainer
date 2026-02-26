@@ -9,6 +9,8 @@ import json
 CACHE_FOLDER = "cache"
 DBS_FOLDER = "data"
 
+#this is probably no longer up to date, some questions are missing, but this should not matter as
+#the scaper is only used for the categories
 MAIN_URL = 'https://www.clickclickdrive.de/fragenkatalog/'
 
 """
@@ -117,7 +119,8 @@ def get_categories(lang:str):
         categories[cid] = {'name': name, 'link': link, 'count': count, 'subs': subs}
     
     dump_dict(categories, db_name)
-    remove_unused_questions()
+    #dont remove unused questions
+    #remove_unused_questions()
 
 
 def scrape_category(url, parent):

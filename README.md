@@ -1,4 +1,13 @@
 # theorie-pruefung
+changed language to German and new questions.
+updated questions to 2026
+if you want to get data yourself you need the apk theorie24
+
+install requirements 
+run setupdb.py
+run gui.py 
+make sure chrome webdriver is installed 
+
 a project that helped me study for my german driving license theory exam. <br>
 ![alt text](https://github.com/vyper0016/theorie-pruefung/blob/main/demo/picture5.jpg?raw=true)
 ![alt text](https://github.com/vyper0016/theorie-pruefung/blob/main/demo/picture10.jpg?raw=true)

@@ -1,5 +1,5 @@
 
-from filters import FILTERS2
+#from filters import FILTERS2
 from scrape import dump_dict, get_json
 from datetime import datetime, timedelta
 from math import ceil

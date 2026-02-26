@@ -160,7 +160,7 @@ def get_set_questions():
     for q in sets[current_sid]:
         question_dic = all_questions[q]
         question_dic['number'] = q
-        question_dic['category_name'] = sub_cats[question_dic['category']]['parent']
+        #question_dic['category_name'] = sub_cats[question_dic['category']]['parent']
         
         for i in current_progress[q]:
             question_dic[i] = current_progress[q][i]
@@ -287,4 +287,4 @@ def update_exam_date(date):
     dump_dict(settings, 'settings.json')
     
 if __name__ == '__main__':
-    eel.start('index.html', mode='default')  # Open the GUI window
+    eel.start('index.html', mode='default',host="0.0.0.0")  # Open the GUI window

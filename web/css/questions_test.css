@@ -266,3 +266,8 @@ to {
   background:#008000;
   color:#ffffff;
 }
+
+.img_answer{
+height: 100px;
+width: fit-content;
+}

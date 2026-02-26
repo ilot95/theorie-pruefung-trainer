@@ -280,3 +280,8 @@ td {
   padding: 10px;
   border-bottom: 1px solid #ccc;
 }
+
+.img_answer{
+height: 100px;
+width: fit-content;
+}
